@@ -108,14 +108,14 @@ void rc_control_task(void *pvParameters) {
 
         uint32_t duty = (abs(speed) * 1023) / 100; 
 
-        if (speed > 0) {
-            // Forward
+        if (speed < 0) {
+            // Reverse
             ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_REV, 0);
             ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_REV);
             ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_FWD, duty);
             ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_FWD);
-        } else if (speed < 0) {
-            // Reverse
+        } else if (speed > 0) {
+            // Forward
             ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_FWD, 0);
             ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_FWD);
             ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_REV, duty);
@@ -141,17 +141,23 @@ void app_main(void) {
     xTaskCreate(rc_control_task, "rc_control_task", 2048, NULL, 5, NULL);
 
     ESP_LOGI(TAG, "Executing slow diagnostic sequence...");
+    vTaskDelay(pdMS_TO_TICKS(5000));
 
     // Example sequence demonstrating how the webapp will interface with the vehicle
-    target_speed_percent = 50; 
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    
     target_speed_percent = 0;
     target_steering = STEER_LEFT;
     vTaskDelay(pdMS_TO_TICKS(1000));
+    
+    target_speed_percent = 50; 
+    target_steering = STEER_CENTER;
+    vTaskDelay(pdMS_TO_TICKS(1000));
 
     target_steering = STEER_RIGHT;
-    target_speed_percent = -50;
+    target_speed_percent = 0;
+    vTaskDelay(pdMS_TO_TICKS(1000));
+
+    target_speed_percent = -50; 
+    target_steering = STEER_CENTER;
     vTaskDelay(pdMS_TO_TICKS(1000));
 
     target_steering = STEER_CENTER;
